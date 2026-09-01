@@ -1,0 +1,69 @@
+# Prima di pubblicare: si rifanno i timbri delle risorse (cosi' un timbro
+# dimenticato non blocca un rilascio, se lo sistema da solo) e poi girano i
+# controlli. Se i tipi non tornano o un test fallisce il deploy si ferma e il
+# sito online resta quello di prima invece di andare offline rotto.
+[build]
+command = "node tools/stamp-assets.mjs && npm test"
+publish = "."
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "SAMEORIGIN"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+
+# Content-Security-Policy: dice al browser da dove puo' caricare le cose. Se
+# qualcuno riuscisse a infilare uno script in un messaggio della chat, il
+# browser si rifiuterebbe di eseguirlo perche' non arriva da questo sito.
+#
+# Vale solo per la pagina del launcher, non per /freecraft/*: il client di gioco
+# e' un unico file generato da 18 MB pieno di script scritti dentro la pagina, e
+# una regola cosi' stretta lo bloccherebbe in partenza.
+#
+# - script-src 'self': niente script scritti dentro la pagina. Per questo il
+#   codice del launcher sta in assets/launcher-boot.js e non in un tag <script>.
+# - style-src ammette 'unsafe-inline' perche' il foglio di stile della pagina e
+#   gli attributi style= sono ancora scritti nell'HTML.
+# - Il font Minecraft arriva da fonts.cdnfonts.com. Il foglio di stile che
+#   quel dominio restituisce puo' puntare i file del font su un suo
+#   sottodominio, quindi la regola copre tutto cdnfonts.com: un font non
+#   esegue codice, e sbagliare qui vorrebbe dire ritrovarsi l'intero
+#   launcher scritto in un carattere di ripiego.
+# - blob: serve all'iframe del gioco e ai suoi worker.
+[[headers]]
+for = "/"
+
+[headers.values]
+Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.cdnfonts.com https://*.cdnfonts.com; font-src 'self' data: https://fonts.cdnfonts.com https://*.cdnfonts.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; worker-src 'self' blob:; media-src 'self' blob: data:; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
+
+[[headers]]
+for = "/index.html"
+
+[headers.values]
+Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.cdnfonts.com https://*.cdnfonts.com; font-src 'self' data: https://fonts.cdnfonts.com https://*.cdnfonts.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; worker-src 'self' blob:; media-src 'self' blob: data:; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'self'"
+
+# Il launcher scarica /freecraft/index.html per mostrare la barra di
+# avanzamento, poi lascia che sia l'iframe a caricarlo dal suo indirizzo reale.
+# Una finestra di freschezza breve fa si' che la seconda richiesta venga servita
+# dalla cache del browser senza nemmeno un giro di rivalidazione, restando
+# abbastanza corta da non tenere in giro un client vecchio dopo un rilascio.
+[[headers]]
+for = "/freecraft/*"
+
+[headers.values]
+Cache-Control = "public, max-age=600, must-revalidate"
+
+# I file in assets/ vengono chiamati con un timbro nell'indirizzo, per esempio
+# chat.js?v=6f2a91c4, calcolato dal loro contenuto (vedi tools/stamp-assets.mjs).
+# Un indirizzo con quel timbro non cambiera' mai contenuto, quindi il browser
+# puo' tenerselo per un anno senza chiedere niente: "immutable" gli dice di non
+# rivalidarlo nemmeno quando si ricarica la pagina. Al rilascio successivo il
+# timbro cambia, l'indirizzo e' un altro e il file nuovo viene scaricato subito.
+[[headers]]
+for = "/assets/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"

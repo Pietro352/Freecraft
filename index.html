@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#181818">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>FREECRAFT</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=add091ad">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=13ec50c1">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
+    <link rel="stylesheet" href="assets/chat.css?v=fc9d648c">
+    <link rel="stylesheet" href="assets/launcher-ui.css?v=b466b8f0">
+    <style>
+        :root {
+            --mc-bg: #181818;
+            --mc-btn-gray: #7e7e7e;
+            --mc-btn-shadow-light: #a0a0a0;
+            --mc-btn-shadow-dark: #3d3d3d;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+        }
+
+        html { font-size: 18px; }
+
+        /* Niente zoom. Su iPhone bastava toccare un campo di testo perche' la
+           pagina si ingrandisse da sola, e finita la scrittura restava
+           ingrandita: meta' interfaccia fuori schermo e nessun modo di
+           rimetterla a posto se non ricaricando. Il blocco vero e' nel tag
+           viewport qui sopra; queste tre regole tolgono i motivi che restano
+           al browser per ingrandire per conto suo. */
+        html {
+            /* Safari gonfia i testi quando decide lui che sono piccoli. */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            /* Il doppio tocco rapido su un pulsante veniva letto come
+               "ingrandisci qui" invece che come due pressioni. */
+            touch-action: manipulation;
+        }
+
+        /* Sotto i 16px iOS ingrandisce da solo il campo che riceve il dito.
+           I moduli della chat e dei pannelli sono gia' a 16px: questa e' la
+           rete di sicurezza per quelli che dovessimo aggiungere domani. */
+        input, select, textarea { font-size: max(16px, 1em); }
+
+        * { box-sizing: border-box; }
+
+        /* La selezione del testo resta attiva ovunque, cosi' si puo' copiare un
+           messaggio o il codice di recupero. La togliamo solo dai comandi, dove
+           trascinare il dito evidenziava le scritte dei pulsanti invece di
+           premerli. */
+        button, .mc-button, .freecrafter-title, .brand-logo, .logo-container,
+        .loading-title, .loading-text, .fc-beta-badge, .player-head, .mini-cube { user-select: none; }
+
+        /* I controlli di modulo non ereditano il font: glielo ripassiamo qui
+           invece di dichiararlo su ogni elemento della pagina. */
+        button, input, select, textarea { font-family: inherit; }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; min-height: 100%;
+            overflow: hidden; background-color: var(--mc-bg);
+            font-family: 'Minecraft', 'Minecraft Regular', monospace;
+            color: white;
+        }
+
+        body { min-height: 100dvh; }
+
+        /* Background Animation Canvas */
+        #bg-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6;
+        }
+
+        /* UI Overlay */
+        .ui-layer {
+            position: fixed; inset: 0; width: 100%; height: 100%; min-height: 100dvh; z-index: 10;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.4); transition: opacity 0.5s;
+        }
+
+        /* Logo */
+        .logo-container {
+            width: 100%; max-width: 100vw; padding: 0 16px;
+            text-align: center; margin-bottom: 50px; animation: float 4s ease-in-out infinite;
+        }
+        .brand-logo {
+            display: block; width: min(677px, 90vw); height: auto; margin: 0 auto;
+            filter: drop-shadow(5px 7px 0 rgba(0, 0, 0, 0.45));
+        }
+        .freecrafter-title {
+            margin: 0; font-size: 4rem; letter-spacing: 4px; color: #ffffff;
+            text-shadow: 4px 4px 0px #3f3f3f;
+        }
+        .freecrafter-title span:first-child { color: #dddddd; }
+        .freecrafter-title span:last-child { color: #ffcc00; }
+        /* Button */
+        .mc-button {
+            position: relative; background-color: var(--mc-btn-gray); border: 2px solid black;
+            box-shadow: inset 4px 4px 0px var(--mc-btn-shadow-light), inset -4px -4px 0px var(--mc-btn-shadow-dark);
+            color: white; font-family: inherit; font-size: 1.5rem;
+            padding: 15px 80px; cursor: pointer; text-shadow: 2px 2px 0px #3f3f3f;
+            transition: transform 0.1s; outline: none; min-width: 300px; text-align: center;
+        }
+        .mc-button:hover:not(:disabled) {
+            background-color: #8f8f8f;
+            box-shadow: inset 4px 4px 0px #bcbcbc, inset -4px -4px 0px #4d4d4d;
+        }
+        .mc-button:active:not(:disabled) {
+            background-color: #6e6e6e; transform: translateY(2px);
+            box-shadow: inset 4px 4px 0px #3d3d3d, inset -4px -4px 0px #a0a0a0;
+        }
+        .mc-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .mc-button.small {
+            padding: 10px 40px; font-size: 1rem; min-width: 200px; margin-top: 10px;
+        }
+
+        .mobile-quality-notice {
+            display: none;
+            width: min(88vw, 420px);
+            margin: 0 16px 22px;
+            padding: 14px 16px;
+            border: 2px solid #141414;
+            background: rgba(38, 38, 38, 0.94);
+            box-shadow: inset 3px 3px 0 #5d5d5d, inset -3px -3px 0 #171717, 4px 5px 0 rgba(0, 0, 0, 0.35);
+            text-align: center;
+            text-shadow: 2px 2px 0 #111;
+        }
+
+        .mobile-quality-notice strong {
+            display: block;
+            margin-bottom: 7px;
+            color: #ffcc00;
+            font-size: 1rem;
+        }
+
+        .mobile-quality-notice span {
+            display: block;
+            color: #e7e7e7;
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        /* Loading Screen */
+        #loading-screen { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+        .loading-title { width: 100%; font-size: 2rem; text-align: center; }
+        .loader-bar-bg { width: 300px; height: 20px; background-color: #333; border: 2px solid white; }
+        .loader-bar-fill { height: 100%; background-color: #55ff55; width: 0%; transition: width 0.2s linear; }
+        .loading-text { font-size: 1rem; text-shadow: 2px 2px 0px #000; text-align: center; padding: 0 20px; }
+
+        /* Error state */
+        .loading-text.error { color: #ff5555; }
+
+        /* Game Container (Hidden initially) */
+        #game-container {
+            display: none; position: fixed; inset: 0; width: 100%; height: 100%; min-height: 100dvh; z-index: 20;
+            background: #000;
+        }
+
+        /* Iframe for Freecraft */
+        #freecraft-frame { width: 100%; height: 100%; border: none; }
+
+        @media (max-width: 600px) {
+            html { font-size: 20px; }
+            .ui-layer {
+                justify-content: flex-start;
+                overflow-y: auto;
+                padding: max(22px, calc(var(--safe-top) + 14px)) max(16px, calc(var(--safe-right) + 12px)) max(24px, calc(var(--safe-bottom) + 16px)) max(16px, calc(var(--safe-left) + 12px));
+            }
+            .ui-layer::before,
+            .ui-layer::after { content: ""; flex: 1 0 12px; }
+            .logo-container {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 24px;
+            }
+            .brand-logo { width: min(100%, 520px); max-width: 100%; }
+            .logo-container .freecrafter-title {
+                font-size: clamp(2rem, 11vw, 3rem);
+                letter-spacing: clamp(1px, 1vw, 4px);
+                white-space: nowrap;
+                text-shadow: 3px 3px 0px #3f3f3f;
+            }
+            .mc-button { width: min(100%, 320px); min-width: 0; padding-inline: 24px; }
+            .mobile-quality-notice { width: min(100%, 420px); margin-inline: 0; }
+        }
+
+        @media (max-width: 768px) and (pointer: coarse) {
+            .mobile-quality-notice { display: block; }
+        }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    </style>
+</head>
+<body>
+
+    <!-- Background Animation -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Main Menu -->
+    <div class="ui-layer" id="main-menu">
+        <div class="logo-container">
+            <img class="brand-logo" src="assets/freecrafter-logo.png?v=da9ff2c6" alt="FREECRAFT"
+                 width="562" height="104" fetchpriority="high" decoding="async">
+        </div>
+        <div class="mobile-quality-notice" role="note">
+            <strong>Su computer si gioca meglio</strong>
+            <span>Per prestazioni, controlli e qualità superiori, ti consigliamo di avviare FREECRAFT da un computer.</span>
+        </div>
+        <button class="mc-button" id="play-btn">Gioca</button>
+        <div class="fc-home-actions">
+            <button class="mc-button small" type="button" data-fc-open="mods">Mod <span class="fc-beta-badge">BETA</span></button>
+            <button class="mc-button small" type="button" data-fc-open="settings">Impostazioni</button>
+            <button class="mc-button small" type="button" data-fc-open="onboarding">Guida</button>
+            <button class="fc-info-button" type="button" data-fc-open="updates" aria-label="Novità: scopri cosa è cambiato"><span class="fc-info-button__icon" aria-hidden="true">i</span><span class="fc-info-button__text">Novità</span></button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div class="ui-layer" id="loading-screen">
+        <div class="freecrafter-title loading-title">Avviamento gioco...</div>
+        <div class="loader-bar-bg"><div class="loader-bar-fill" id="progress-bar"></div></div>
+        <div class="loading-text" id="loading-msg">Inizializzazione...</div>
+        <button class="mc-button small" id="retry-btn" style="display:none;">Torna al menu</button>
+    </div>
+
+    <!-- Actual Game Engine Container -->
+    <div id="game-container">
+        <!--
+           NOTA:
+           Questo iframe carica il client Freecraft dalla cartella locale ./freecraft/.
+
+           Struttura attesa:
+           /index.html            <- questo file
+           /freecraft/index.html  <- il client Freecraft integrato
+           /freecraft/...         <- tutti i suoi asset
+        -->
+        <iframe id="freecraft-frame" allowfullscreen></iframe>
+    </div>
+
+    <!--
+       Pulsanti rapidi: su computer restano nascosti mentre giochi e compaiono
+       solo quando il gioco mostra un menu (puntatore sbloccato), cosi' non
+       coprono la partita. Sul telefono il puntatore non si blocca mai, quindi
+       non c'e' modo di sapere se stai giocando: la barra diventa un solo
+       appiglio piccolo e semitrasparente in alto a destra (chat compresa) che
+       si puo' trascinare dove non copre i comandi touch del gioco.
+    -->
+    <div class="fc-quick-actions" aria-label="Scorciatoie FREECRAFT">
+        <div class="fc-quick-actions__menu" id="fc-quick-actions-menu" hidden>
+            <button type="button" data-fc-open="chat" id="fc-quick-chat">CraftChat</button>
+            <button type="button" data-fc-open="settings">Impostazioni</button>
+            <button type="button" data-fc-open="mods">Mod <span class="fc-beta-badge">BETA</span></button>
+            <button type="button" data-fc-open="onboarding">Guida</button>
+            <button type="button" data-fc-open="updates">Novità</button>
+        </div>
+        <button class="fc-quick-actions__toggle" id="fc-quick-actions-toggle" type="button" aria-label="Apri scorciatoie" aria-controls="fc-quick-actions-menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span class="fc-quick-actions__label">Menu</span>
+        </button>
+    </div>
+
+    <button class="chat-trigger" id="chat-trigger" type="button" aria-label="Apri CraftChat" aria-expanded="false">
+        <span class="chat-trigger__cube" aria-hidden="true"><i></i><b></b></span>
+        <span class="chat-trigger__label">CHAT</span>
+        <span class="chat-trigger__pulse" aria-hidden="true"></span>
+    </button>
+
+    <div class="chat-message-banner" id="chat-message-banner" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <span class="chat-message-banner__icon" aria-hidden="true">✉</span>
+        <div><strong id="chat-message-banner-title">NUOVO MESSAGGIO</strong><span id="chat-message-banner-text"></span></div>
+    </div>
+
+    <aside class="craft-chat" id="craft-chat" aria-hidden="true" aria-label="CraftChat">
+        <header class="craft-chat__header">
+            <div class="craft-chat__brand">
+                <span class="mini-cube" aria-hidden="true"><i></i><b></b></span>
+                <div><strong>CRAFTCHAT</strong><small>MESSAGGI DAL MONDO</small></div>
+            </div>
+            <button class="pixel-icon" id="chat-close" type="button" aria-label="Chiudi chat">×</button>
+        </header>
+
+        <div class="chat-notice" id="chat-notice" role="status" aria-live="polite"></div>
+
+        <section class="auth-screen" id="auth-screen">
+            <div class="simple-auth-title"><span class="mini-cube" aria-hidden="true"><i></i><b></b></span><div><strong>ENTRA IN CRAFTCHAT</strong><small>BASTANO NOME E PASSWORD</small></div></div>
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab is-active" type="button" data-auth-tab="login">ACCEDI</button>
+                <button class="auth-tab" type="button" data-auth-tab="signup">REGISTRATI</button>
+                <button class="auth-tab" type="button" data-auth-tab="recover">RECUPERA</button>
+            </div>
+            <form class="auth-form is-active" id="login-form" data-auth-panel="login">
+                <label>Nome<input type="text" name="name" autocomplete="username" minlength="3" maxlength="24" required placeholder="Steve_92"></label>
+                <label>Password<input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></label>
+                <button class="pixel-button pixel-button--green" type="submit">ACCEDI</button>
+            </form>
+            <form class="auth-form" id="signup-form" data-auth-panel="signup">
+                <label>Nome<input type="text" name="name" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]+" required placeholder="Steve_92"></label>
+                <label>Password<input type="password" name="password" autocomplete="new-password" minlength="8" required placeholder="8+ caratteri, lettera e numero"></label>
+                <button class="pixel-button pixel-button--gold" type="submit">REGISTRATI</button>
+            </form>
+            <form class="auth-form" id="recover-form" data-auth-panel="recover">
+                <label>Nome<input type="text" name="name" autocomplete="username" minlength="3" maxlength="24" required placeholder="Steve_92"></label>
+                <label>Codice di recupero<input type="text" name="recoveryCode" autocomplete="off" maxlength="17" required placeholder="RCV-XXXX-XXXX-XXXX"></label>
+                <label>Nuova password<input type="password" name="password" autocomplete="new-password" minlength="8" required placeholder="8+ caratteri, lettera e numero"></label>
+                <button class="pixel-button pixel-button--gold" type="submit">RECUPERA ACCOUNT</button>
+            </form>
+            <p class="auth-storage-note">La sessione dura 30 giorni. Conserva il codice di recupero in un posto sicuro.</p>
+        </section>
+
+        <section class="chat-app" id="chat-app" hidden>
+            <div class="player-card">
+                <div class="player-head" aria-hidden="true"><span></span></div>
+                <div class="player-card__identity"><strong id="profile-name">Crafter</strong><small>ONLINE</small></div>
+                <div class="player-code"><small>IL TUO ID</small><button id="copy-code" type="button"><span id="profile-code">---</span> ⧉</button></div>
+                <button class="logout-button" id="chat-security" type="button" aria-label="Sicurezza account">⚙</button>
+                <button class="logout-button" id="logout-button" type="button" aria-label="Esci">↪</button>
+            </div>
+
+            <div class="chat-workspace">
+                <section class="chat-directory" id="chats-view">
+                    <div class="directory-title"><div><small>MESSAGGI</small><strong>CHAT E GRUPPI</strong></div><div class="directory-actions"><button id="add-friend" type="button">+ ID</button><button id="new-group" type="button">+ GRUPPO</button></div></div>
+                    <div class="pixel-list" id="conversation-list"></div>
+                </section>
+
+                <section class="conversation" id="conversation-view" hidden>
+                    <header class="conversation__header">
+                        <button class="pixel-icon conversation-back" id="conversation-back" type="button" aria-label="Torna alle chat">‹</button>
+                        <div class="conversation-avatar" id="conversation-avatar">G</div>
+                        <div><strong id="conversation-title">Gruppo</strong><small id="conversation-meta">0 membri</small></div>
+                        <button class="conversation-safety" id="conversation-safety" type="button" aria-label="Blocca utente" hidden>BLOCCA</button>
+                    </header>
+                    <button class="load-older" id="load-older" type="button" hidden>CARICA MESSAGGI PRECEDENTI</button>
+                    <div class="message-list" id="message-list" aria-live="polite"></div>
+                    <form class="message-form" id="message-form">
+                        <input type="text" name="message" maxlength="1000" autocomplete="off" placeholder="Scrivi nel libro..." aria-label="Messaggio">
+                        <button type="submit" aria-label="Invia messaggio">➤</button>
+                    </form>
+                </section>
+            </div>
+        </section>
+
+        <dialog class="group-dialog" id="friend-dialog">
+            <form method="dialog" id="friend-form">
+                <div class="dialog-heading"><div><small>NUOVA CHAT</small><strong>AGGIUNGI ID</strong></div><button class="pixel-icon" value="cancel" type="submit" formnovalidate>×</button></div>
+                <label>ID Crafter<input type="text" name="friendCode" required placeholder="CRF-XXXX-XXXX" maxlength="13"></label>
+                <button class="pixel-button pixel-button--green" value="default" type="submit">AGGIUNGI E SCRIVI</button>
+            </form>
+        </dialog>
+
+        <dialog class="group-dialog" id="group-dialog">
+            <form method="dialog" id="group-form">
+                <div class="dialog-heading"><div><small>NUOVO PARTY</small><strong>CREA GRUPPO</strong></div><button class="pixel-icon" value="cancel" type="submit" formnovalidate>×</button></div>
+                <label>Nome gruppo<input name="name" type="text" minlength="2" maxlength="40" required placeholder="I Minatori"></label>
+                <fieldset><legend>Invita amici</legend><div id="group-friends"></div></fieldset>
+                <button class="pixel-button pixel-button--gold" value="default" type="submit">CREA IL PARTY</button>
+            </form>
+        </dialog>
+
+        <dialog class="group-dialog" id="recovery-dialog">
+            <form method="dialog">
+                <div class="dialog-heading"><div><small>SALVALO ORA</small><strong>CODICE DI RECUPERO</strong></div></div>
+                <p class="dialog-copy">Questo codice sostituisce quello precedente e viene mostrato una sola volta.</p>
+                <output class="recovery-code" id="recovery-code">RCV-XXXX-XXXX-XXXX</output>
+                <button class="pixel-button pixel-button--green" id="copy-recovery" value="default" type="submit">COPIA E CHIUDI</button>
+            </form>
+        </dialog>
+
+        <dialog class="group-dialog" id="security-dialog">
+            <form method="dialog" id="password-form">
+                <div class="dialog-heading"><div><small>ACCOUNT E PRIVACY</small><strong>SICUREZZA</strong></div><button class="pixel-icon" value="cancel" type="submit" formnovalidate>×</button></div>
+                <label>Password attuale<input type="password" name="currentPassword" autocomplete="current-password" required></label>
+                <label>Nuova password<input type="password" name="password" autocomplete="new-password" minlength="8" required placeholder="8+ caratteri, lettera e numero"></label>
+                <button class="pixel-button pixel-button--gold" value="change" type="submit">CAMBIA PASSWORD</button>
+                <fieldset><legend>Utenti bloccati</legend><div id="blocked-users" class="blocked-users"></div></fieldset>
+            </form>
+        </dialog>
+
+        <dialog class="group-dialog" id="report-dialog">
+            <form method="dialog" id="report-form">
+                <div class="dialog-heading"><div><small>MODERAZIONE</small><strong>SEGNALA MESSAGGIO</strong></div><button class="pixel-icon" value="cancel" type="submit" formnovalidate>×</button></div>
+                <input type="hidden" name="messageId">
+                <label>Motivo<select name="reason"><option>Spam</option><option>Insulti o molestie</option><option>Contenuto inappropriato</option><option>Altro</option></select></label>
+                <button class="pixel-button pixel-button--gold" value="report" type="submit">INVIA SEGNALAZIONE</button>
+            </form>
+        </dialog>
+    </aside>
+
+    <script src="assets/launcher-config.js?v=6a7f4df7"></script>
+    <script src="assets/releases.js?v=1f3717fc"></script>
+    <script src="assets/telemetry.js?v=1324fde0"></script>
+    <script src="assets/launcher-boot.js?v=a21d8f01"></script>
+    <script src="assets/launcher-panels.js?v=2c8df28f"></script>
+    <script src="assets/launcher-effects.js?v=c1657b3e"></script>
+    <script src="assets/chat.js?v=f988a0d9"></script>
+</body>
+</html>

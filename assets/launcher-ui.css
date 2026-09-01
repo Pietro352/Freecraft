@@ -1,0 +1,546 @@
+/* Pannelli "Mod" e "Impostazioni" del launcher FREECRAFTER. */
+
+.fc-home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.fc-beta-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 3px 6px 2px;
+    border: 1px solid #2f2600;
+    background: #ffcc00;
+    color: #171300;
+    font-size: 0.62em;
+    line-height: 1;
+    text-shadow: none;
+    vertical-align: 0.18em;
+}
+
+.fc-home-actions .mc-button.small { margin-top: 0; min-width: 168px; padding: 10px 26px; }
+
+.fc-info-button {
+    min-width: 118px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 2px solid #000;
+    background: #536b35;
+    color: #fff;
+    box-shadow: inset 3px 3px 0 #78964e, inset -3px -3px 0 #28351a;
+    font: inherit;
+    font-size: 0.84rem;
+    text-shadow: 2px 2px 0 #1a2111;
+    cursor: pointer;
+}
+
+/* Solo il cerchietto della "i": prima la regola valeva per qualsiasi <span>
+   dentro al pulsante, quindi anche il segnalatore delle novita' veniva
+   disegnato come un secondo cerchio con la scritta che debordava sopra
+   l'etichetta, come se il testo del pulsante fosse scritto due volte. */
+.fc-info-button__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-right: 7px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
+.fc-info-button:hover { background: #607b3e; }
+.fc-info-button:active { transform: translateY(2px); box-shadow: inset 3px 3px 0 #28351a, inset -3px -3px 0 #78964e; }
+
+/* Pulsanti rapidi mostrati sopra il gioco quando il menu del gioco e' aperto */
+/* In basso a destra, sopra il pulsante della chat: in alto si sovrapponeva
+   al logo e alla schermata dei crediti del menu di gioco. */
+.fc-quick-actions {
+    position: fixed;
+    z-index: 60;
+    bottom: max(84px, calc(var(--safe-bottom, 0px) + 76px));
+    right: max(22px, calc(var(--safe-right, 0px) + 14px));
+    display: none;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.is-in-game.is-game-menu-open .fc-quick-actions { display: flex; }
+
+.fc-quick-actions button {
+    color: #fff;
+    line-height: 1;
+    font-family: inherit;
+    background: #7e7e7e;
+    border: 2px solid #000;
+    box-shadow: inset 4px 4px 0 #a0a0a0, inset -4px -4px 0 #3d3d3d;
+    cursor: pointer;
+}
+
+.fc-quick-actions button:hover { background: #8f8f8f; }
+.fc-quick-actions button:active { transform: translateY(2px); box-shadow: inset 4px 4px 0 #3d3d3d, inset -4px -4px 0 #a0a0a0; }
+
+.fc-quick-actions__toggle {
+    display: grid;
+    place-items: center;
+    gap: 4px;
+    width: 58px;
+    height: 58px;
+    padding: 7px 5px 5px;
+}
+
+.fc-quick-actions__toggle > span:first-child {
+    position: relative;
+    width: 22px;
+    height: 4px;
+    background: currentColor;
+    box-shadow: 0 -7px 0 currentColor, 0 7px 0 currentColor;
+}
+
+.fc-quick-actions__label {
+    margin-top: 5px;
+    font-size: 0.56rem;
+    text-transform: uppercase;
+}
+
+.fc-quick-actions__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 7px;
+    background: rgba(28, 28, 28, 0.96);
+    border: 2px solid #090909;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.38);
+    transform-origin: right center;
+    animation: fcQuickMenuIn 0.14s steps(3);
+}
+
+.fc-quick-actions__menu[hidden] { display: none; }
+
+.fc-quick-actions__menu button {
+    min-width: 148px;
+    min-height: 42px;
+    padding: 9px 13px;
+    font-size: 0.74rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+@keyframes fcQuickMenuIn {
+    from { opacity: 0; transform: translateX(8px) scale(0.96); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Pallino dei messaggi non letti sulla voce CraftChat del menu rapido. */
+.fc-quick-actions button.has-unread::after {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 9px;
+    background: #ffcc00;
+    border: 2px solid #4d3b00;
+    vertical-align: middle;
+}
+
+/*
+   Telefoni e tablet: un solo appiglio, piccolo e spostabile.
+
+   Il blocco del puntatore non esiste sui touch, quindi "is-game-menu-open"
+   resta sempre acceso e i pulsanti del launcher restavano piantati in basso a
+   destra, esattamente sopra i comandi di salto e abbassamento del gioco. Qui
+   la barra si ritira in alto a destra, diventa semitrasparente, ingloba anche
+   la chat e si puo' trascinare altrove: sotto il pollice resta il gioco.
+*/
+@media (pointer: coarse) {
+    .is-in-game .fc-quick-actions {
+        top: max(10px, calc(var(--safe-top, 0px) + 6px));
+        right: max(10px, calc(var(--safe-right, 0px) + 6px));
+        bottom: auto;
+        align-items: flex-start;
+        opacity: 0.45;
+        transition: opacity 0.18s linear;
+    }
+
+    /* Posizione scelta trascinando: le variabili le scrive il launcher. */
+    .is-in-game .fc-quick-actions.is-moved {
+        top: var(--fc-dock-y);
+        right: var(--fc-dock-right);
+        left: auto;
+    }
+
+    /* Trascinato nella meta' sinistra: si ancora a sinistra e il menu si apre
+       verso destra, altrimenti finirebbe fuori dallo schermo. */
+    .is-in-game .fc-quick-actions.is-flipped {
+        left: var(--fc-dock-x);
+        right: auto;
+        flex-direction: row-reverse;
+    }
+    .is-in-game .fc-quick-actions.is-flipped .fc-quick-actions__menu { transform-origin: left center; }
+
+    .is-in-game .fc-quick-actions.is-open,
+    .is-in-game .fc-quick-actions.is-dragging { opacity: 1; }
+
+    .is-in-game .fc-quick-actions__toggle {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        touch-action: none;
+    }
+
+    .is-in-game .fc-quick-actions__toggle > span:first-child {
+        width: 17px;
+        height: 3px;
+        box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+    }
+
+    .is-in-game .fc-quick-actions__label { display: none; }
+
+    .is-in-game .fc-quick-actions__menu button {
+        min-width: 140px;
+        min-height: 40px;
+        padding: 8px 11px;
+        font-size: 0.68rem;
+    }
+}
+
+.fc-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: max(16px, var(--safe-top, 0px)) max(16px, var(--safe-right, 0px)) max(16px, var(--safe-bottom, 0px)) max(16px, var(--safe-left, 0px));
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.fc-overlay.is-open { display: flex; }
+
+.fc-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: min(720px, 100%);
+    max-height: min(86dvh, 860px);
+    overflow: hidden;
+    color: #fff;
+    background: #2b2b2b;
+    border: 3px solid #000;
+    box-shadow: inset 4px 4px 0 #565656, inset -4px -4px 0 #1a1a1a, 8px 9px 0 rgba(0, 0, 0, 0.45);
+}
+
+.fc-update {
+    position: relative;
+    overflow: hidden;
+    padding: 22px;
+    border: 2px solid #111;
+    background: #343a2b;
+    box-shadow: inset 4px 4px 0 #505a42, inset -4px -4px 0 #20251b;
+}
+
+.fc-update::after {
+    content: '½';
+    position: absolute;
+    right: 15px;
+    bottom: -22px;
+    color: rgba(255, 255, 255, 0.07);
+    font-size: 7rem;
+    line-height: 1;
+}
+
+.fc-update__date { color: #ffcc00; font-size: 0.66rem; letter-spacing: 0.08em; }
+.fc-update__title { position: relative; z-index: 1; margin: 12px 0 14px; font-size: 1.05rem; color: #fff; }
+.fc-update__text, .fc-update__hint { position: relative; z-index: 1; margin: 0; line-height: 1.65; }
+.fc-update__text { color: #ededed; font-size: 0.8rem; }
+.fc-update__hint { margin-top: 16px; padding-top: 14px; border-top: 1px solid #657052; color: #cbd7b8; font-size: 0.7rem; }
+.fc-update + .fc-update { margin-top: 16px; }
+.fc-update__list { position: relative; z-index: 1; display: grid; gap: 10px; margin: 0; padding-left: 22px; color: #ededed; font-size: 0.76rem; line-height: 1.55; }
+/* Segnalatore "c'e' qualcosa da leggere": un quadratino e basta. La scritta
+   "NUOVO" accanto alla parola "Novita'" sembrava la stessa etichetta ripetuta. */
+.fc-new-badge { display: inline-block; width: 10px; height: 10px; margin-left: 9px; background: #ffcc00; border: 2px solid #4d3b00; vertical-align: middle; }
+.fc-onboarding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.fc-onboarding-card { padding: 18px; color: #eee; background: #353a2e; border: 2px solid #111; box-shadow: inset 3px 3px 0 #515a45, inset -3px -3px 0 #20241c; }
+.fc-onboarding-card h3 { margin: 0 0 12px; color: #ffcc00; font-size: 0.8rem; }
+.fc-onboarding-card p { margin: 0; font-size: 0.7rem; line-height: 1.65; }
+.fc-onboarding-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.fc-action-button { min-height: 46px; padding: 10px 16px; color: #fff; background: #666; border: 2px solid #111; box-shadow: inset 3px 3px 0 #8d8d8d, inset -3px -3px 0 #383838; font: inherit; font-size: 0.66rem; cursor: pointer; }
+.fc-action-button.is-primary { background: #538a35; box-shadow: inset 3px 3px 0 #79b653, inset -3px -3px 0 #2c4f1c; }
+.fc-action-button:disabled { opacity: 0.7; cursor: default; }
+
+.fc-panel__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    background: #3c3c3c;
+    border-bottom: 3px solid #111;
+    box-shadow: inset 0 4px 0 #575757;
+}
+
+.fc-panel__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fc-panel__back {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 9px 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.68rem;
+    background: #666;
+    border: 2px solid #000;
+    box-shadow: inset 3px 3px 0 #909090, inset -3px -3px 0 #363636;
+    cursor: pointer;
+}
+
+.fc-panel__back:hover { background: #777; }
+.fc-panel__back:active { transform: translateY(2px); box-shadow: inset 3px 3px 0 #363636, inset -3px -3px 0 #909090; }
+
+.fc-panel__header h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    letter-spacing: 2px;
+    text-shadow: 3px 3px 0 #151515;
+}
+
+.fc-panel__header p { margin: 6px 0 0; color: #bdbdbd; font-size: 0.72rem; }
+
+.fc-panel__close {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    color: #fff;
+    font-size: 1.5rem;
+    line-height: 1;
+    background: #8a4a44;
+    border: 2px solid #000;
+    box-shadow: inset 3px 3px 0 #b5665e, inset -3px -3px 0 #542a26;
+    cursor: pointer;
+}
+
+.fc-panel__close:hover { filter: brightness(1.12); }
+
+.fc-panel__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 18px max(28px, calc(var(--safe-bottom, 0px) + 20px));
+    background: #232323;
+}
+
+.fc-section + .fc-section { margin-top: 22px; }
+
+.fc-section__title {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    color: #ffcc00;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #3d3d3d;
+    text-shadow: 2px 2px 0 #141414;
+}
+
+.fc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
+    align-items: center;
+    gap: 12px 18px;
+    padding: 12px;
+    background: #2d2d2d;
+    border: 2px solid #151515;
+    box-shadow: inset 2px 2px 0 #464646, inset -2px -2px 0 #1d1d1d;
+}
+
+.fc-row + .fc-row { margin-top: 9px; }
+.fc-row--stacked { grid-template-columns: minmax(0, 1fr); }
+
+.fc-row__label { font-size: 0.82rem; }
+.fc-row__hint { display: block; margin-top: 6px; color: #a9a9a9; font-size: 0.66rem; line-height: 1.45; }
+.fc-row__control { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.fc-row--stacked .fc-row__control { justify-content: flex-start; }
+
+.fc-toggle {
+    position: relative;
+    width: 84px;
+    height: 34px;
+    padding: 0;
+    color: #fff;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    background: #6b3f3b;
+    border: 2px solid #000;
+    box-shadow: inset 3px 3px 0 #8f5a54, inset -3px -3px 0 #43241f;
+    cursor: pointer;
+}
+
+.fc-toggle[aria-pressed="true"] {
+    background: #4a7c33;
+    box-shadow: inset 3px 3px 0 #6da849, inset -3px -3px 0 #2c4a1e;
+}
+
+.fc-range { display: flex; align-items: center; gap: 10px; width: 100%; }
+.fc-range input[type="range"] { flex: 1; min-width: 90px; accent-color: #55ff55; }
+.fc-range output { min-width: 62px; color: #ffcc00; font-size: 0.72rem; text-align: right; }
+
+.fc-select,
+.fc-text,
+.fc-code {
+    width: 100%;
+    padding: 9px 10px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.76rem;
+    background: #1b1b1b;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #3f3f3f;
+    outline: none;
+}
+
+.fc-code { min-height: 168px; font-family: monospace; font-size: 0.78rem; line-height: 1.5; resize: vertical; user-select: text; }
+
+@supports (-webkit-touch-callout: none) {
+    .fc-text, .fc-select, .fc-code { font-size: 16px; }
+}
+.fc-color { width: 60px; height: 34px; padding: 2px; background: #1b1b1b; border: 2px solid #000; cursor: pointer; }
+
+.fc-mini-button {
+    min-height: 34px;
+    padding: 8px 14px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.7rem;
+    background: #7e7e7e;
+    border: 2px solid #000;
+    box-shadow: inset 3px 3px 0 #a0a0a0, inset -3px -3px 0 #3d3d3d;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.fc-mini-button:hover { background: #8f8f8f; }
+.fc-mini-button:active { transform: translateY(2px); box-shadow: inset 3px 3px 0 #3d3d3d, inset -3px -3px 0 #a0a0a0; }
+.fc-mini-button.is-danger { background: #8a4a44; box-shadow: inset 3px 3px 0 #b5665e, inset -3px -3px 0 #542a26; }
+.fc-mini-button.is-listening { background: #4a7c33; box-shadow: inset 3px 3px 0 #6da849, inset -3px -3px 0 #2c4a1e; }
+
+.fc-info-value { color: #d6d6d6; font-size: 0.74rem; text-align: right; word-break: break-word; }
+
+/* Schede delle mod */
+.fc-mod {
+    padding: 14px;
+    background: #2d2d2d;
+    border: 2px solid #151515;
+    box-shadow: inset 2px 2px 0 #464646, inset -2px -2px 0 #1d1d1d;
+}
+
+.fc-mod + .fc-mod { margin-top: 11px; }
+.fc-mod.is-enabled { box-shadow: inset 2px 2px 0 #4c7a35, inset -2px -2px 0 #1d1d1d; }
+
+.fc-mod__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+}
+
+.fc-mod__name { font-size: 0.88rem; }
+.fc-mod__badge { margin-left: 9px; padding: 3px 7px; color: #101010; font-size: 0.55rem; background: #55ff55; }
+.fc-mod__desc { margin: 7px 0 0; color: #a9a9a9; font-size: 0.68rem; line-height: 1.5; }
+.fc-mod__controls { display: none; margin-top: 13px; padding-top: 13px; border-top: 2px solid #3a3a3a; }
+.fc-mod.is-enabled .fc-mod__controls { display: block; }
+
+.fc-panel__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: #2f2f2f;
+    border-top: 3px solid #111;
+}
+
+.fc-panel__footer p { margin: 0; color: #a9a9a9; font-size: 0.66rem; }
+
+.fc-toast {
+    position: fixed;
+    z-index: 260;
+    bottom: max(20px, calc(var(--safe-bottom, 0px) + 16px));
+    left: 50%;
+    padding: 12px 18px;
+    color: #fff;
+    font-size: 0.74rem;
+    text-align: center;
+    background: #315b2c;
+    border: 2px solid #16220f;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, 18px);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.18s ease;
+}
+
+.fc-toast.is-visible { transform: translate(-50%, 0); opacity: 1; }
+.fc-toast.is-error { background: #8a3a34; border-color: #3f1a16; }
+
+body.fc-hide-chat-button .chat-trigger,
+body.fc-hide-chat-button #fc-quick-chat { display: none !important; }
+
+@media (max-width: 600px) {
+    .fc-onboarding-grid { grid-template-columns: 1fr; }
+    .fc-home-actions { width: min(100%, 320px); }
+    .fc-home-actions .mc-button.small { width: 100%; }
+    .fc-overlay {
+        align-items: stretch;
+        padding: max(6px, var(--safe-top, 0px)) max(6px, var(--safe-right, 0px)) max(6px, var(--safe-bottom, 0px)) max(6px, var(--safe-left, 0px));
+    }
+    .fc-panel { width: 100%; height: 100%; max-height: none; }
+    .fc-panel__header { gap: 8px; padding: 11px 10px; }
+    .fc-panel__back { min-height: 44px; padding: 9px 11px; font-size: 0.72rem; }
+    .fc-panel__close { width: 40px; height: 40px; }
+    .fc-panel__header h2 { font-size: 1.18rem; }
+    .fc-panel__header p { display: none; }
+    .fc-panel__body { padding: 12px 12px max(36px, calc(var(--safe-bottom, 0px) + 28px)); }
+    .fc-row { grid-template-columns: minmax(0, 1fr); }
+    .fc-section__title { font-size: 1.05rem; }
+    .fc-row__label { font-size: 0.94rem; line-height: 1.35; }
+    .fc-row__hint { font-size: 0.78rem; line-height: 1.55; }
+    .fc-row__control { width: 100%; justify-content: flex-start; }
+    .fc-toggle { width: 96px; height: 40px; font-size: 0.7rem; }
+    .fc-range output { font-size: 0.82rem; }
+    .fc-select, .fc-text, .fc-code { font-size: 16px; }
+    .fc-mini-button { min-height: 40px; font-size: 0.8rem; }
+    .fc-mod__name { font-size: 1rem; }
+    .fc-mod__desc { font-size: 0.8rem; line-height: 1.6; }
+    .fc-update__date { font-size: 0.75rem; }
+    .fc-update__title { font-size: 1.12rem; line-height: 1.35; }
+    .fc-update__list { font-size: 0.86rem; line-height: 1.65; }
+    .fc-update__hint { font-size: 0.8rem; }
+    .fc-onboarding-card h3 { font-size: 0.94rem; }
+    .fc-onboarding-card p { font-size: 0.84rem; line-height: 1.65; }
+    .fc-action-button { width: 100%; min-height: 50px; font-size: 0.78rem; }
+    .fc-toast { width: calc(100% - 30px); font-size: 0.84rem; line-height: 1.45; }
+    .fc-range, .fc-select, .fc-text, .fc-code { min-width: 0; max-width: 100%; }
+    .fc-info-value { text-align: left; }
+    .fc-quick-actions { bottom: max(72px, calc(var(--safe-bottom, 0px) + 64px)); right: max(12px, calc(var(--safe-right, 0px) + 8px)); }
+    .fc-quick-actions__toggle { width: 50px; height: 50px; }
+    .fc-quick-actions__toggle > span:first-child { width: 19px; }
+    .fc-quick-actions__label { display: none; }
+    .fc-quick-actions__menu button { min-width: 132px; min-height: 40px; font-size: 0.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fc-quick-actions__menu { animation: none; }
+}
